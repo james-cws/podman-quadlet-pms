@@ -1,0 +1,58 @@
+[Unit]
+Description=Container providing a rootless Plex Media Server
+After=plex-network.service plex-pod.service
+Requires=plex-network.service plex-pod.service
+
+[Container]
+Pod=plex.pod
+ContainerName=plex-media-server
+Image=docker.io/plexinc/pms-docker:latest
+AutoUpdate=registry
+StopTimeout=60
+Volume=%h/plex-config:/config:Z,rw
+
+# Required: Path to your local media storage
+# Note: if sharing the media with other containers then
+#       use the "shared" SELinux context label `z`, but
+#       if only Plex will be mounting the volume then it's
+#       safer to use the stricter `Z` "private" label.
+# Change to `rw` if Plex should be allowed to delete media
+#Volume=/path/to/personal/media:/media:Z,ro
+
+# Optionally use a tmpfs for transcodes
+# NOTE: not recommended by Plex, but if there's a lot of
+#       RAM available this can reduce SSD wear & tear, see
+#       Plex documentation on minimum size requirements
+#Tmpfs=/transcode:size=16G
+
+# Enable this to expose an already configured GPU (follow
+# the directions specific to your GPU brand/model).
+#PodmanArgs=--gpus all
+# Set SELinux label (eg, for an Nvidia GPU)
+#SecurityLabelType=nvidia_container_t
+
+# Optional, set to your local timezone
+Timezone=UTC
+Environment=TZ=UTC
+
+EnvironmentFile=%h/.config/containers/systemd/plex-media-server.container.d/pms.env
+
+# Plex Media Server has a builtin health check, which
+# should be used, however we can also use the health check
+# as a method to detect SSL cert updates and restart the
+# container; doing it this way avoids worse hacks like
+# exposing Docker API's
+# The restart strategy should be designed around the
+# specific local setup and the level of isolation between,
+# for example, the reverse proxy and Plex.
+#HealthCmd=/custom_healthcheck.sh
+#HealthInterval=30s
+#HealthRetries=3
+#HealthStartPeriod=10s
+#HealthTimeout=5s
+#HealthOnFailure=kill
+
+[Service]
+TimeoutStartSec=300
+Restart=always
+RestartSec=10

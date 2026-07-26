@@ -1,0 +1,4 @@
+[Network]
+NetworkName=plex-network
+Driver=bridge
+IPv6=true

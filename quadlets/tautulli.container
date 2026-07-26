@@ -1,0 +1,21 @@
+[Unit]
+Description=Container providing Tautulli Plex monitoring
+After=plex-network.service plex-media-server.service plex-pod.service
+Requires=plex-network.service plex-pod.service
+
+[Container]
+Pod=plex.pod
+ContainerName=tautulli
+Image=ghcr.io/tautulli/tautulli:latest
+AutoUpdate=registry
+Timezone=UTC
+StopTimeout=60
+Volume=%h/tautulli-config:/config:Z
+Environment=TZ=UTC
+#Environment=PUID=1001
+#Environment=PGID=1001
+
+[Service]
+TimeoutStartSec=300
+Restart=always
+RestartSec=30
