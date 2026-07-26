@@ -1,0 +1,32 @@
+[Unit]
+Description=Plex Media Server Pod
+After=plex-network.service
+Requires=plex-network.service
+
+[Pod]
+PodName=plex-pod
+HostName=plex-media-server
+Network=plex-network
+
+# For dual NIC hosts, to isolate the pod to a single interface you need
+# to include the host's IP addresses assigned to the desired NIC (as of
+# podman v5). At the time of writing there's discussion on improving this
+# so check the official documentation, but for now it must be a numerical
+# IP address so if at all possible use static IP addresses. It may also
+# be a good idea to disable IPv6 on the pod's internal network to make
+# this more manageable owing to the difficulty in setting static IPv6.
+# Publish port 32400 for PMS
+PublishPort=32400:32400
+# Publish port 8181 for Tautulli
+PublishPort=8181:8181
+
+# Uncomment this to expose SSL credentials to the **entire** pod.
+#Volume=/path/to/ssl/certs:/ssl:z,ro
+
+[Service]
+TimeoutStartSec=600
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target
