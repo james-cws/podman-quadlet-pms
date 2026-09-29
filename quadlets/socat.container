@@ -1,0 +1,44 @@
+[Unit]
+Description=Container providing a socat shim exposing a unix socket for PMS
+After=plex-network.service plex-media-server.service
+Requires=plex-pod.service plex-media-server.service
+PartOf=plex-pod.service
+
+[Container]
+Pod=plex.pod
+ContainerName=socat
+Image=docker.io/alpine/socat:latest
+AutoUpdate=registry
+Volume=/run/user/%U/proxy:/socket:U,z
+Exec=UNIX-LISTEN:/socket/plex.sock,fork,mode=666 TCP-CONNECT:localhost:32400
+# The above creates a Unix socket that listens for incoming connections
+# (conceptually like a server), and makes a TCP connection to Plex on
+# localhost:32400 (since Plex itself doesn't support Unix sockets). Note
+# that using mode 666 is unsafe & should not be used in production;
+# keeping it wide open for initial setup reduces complexity from the
+# classic Linux permissions headache, but once it's working it should be
+# restricted using appropriate mechanisms (eg, set specific groups or
+# ACL's per your specific host OS & filesystem's capabilities).
+#
+# This is mostly useful for cases where a reverse proxy may not be
+# part of the Plex pod's namespace and subsequently wouldn't have
+# access to `localhost`. Since a Unix socket is functionally a file,
+# we can use it to provide a reasonably safe way to gain IPC between
+# the containers without sharing their namespace. So, if we have, for
+# example, a rootful haproxy container using the macvlan network driver
+# on the same hardware that Plex is running on, we can allow haproxy to
+# connect to Plex via the Unix socket without all the added overhead of
+# using a TCP connection to the network facing interface via the
+# container bridge.
+
+[Service]
+# Before starting the pod, make the directory where we'll store the
+# unix socket. It's best to restrict permissions to -m 700 but in many
+# cases the reverse proxy will be operating under a different user so
+# 711 is a compromise that allows any other user to traverse the directory
+# without having permission to read its contents (each file and subdirectory
+# under this directory would manage its read/write/execute individually).
+ExecStartPre=-mkdir -m 711 -p /run/user/%U/proxy
+TimeoutStartSec=300
+Restart=always
+RestartSec=10
