@@ -2,6 +2,7 @@
 Description=Plex Media Server Pod
 After=plex-network.service
 Requires=plex-network.service
+Wants=plex-media-server.service tautulli.service socat.service
 
 [Pod]
 PodName=plex-pod

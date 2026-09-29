@@ -1,7 +1,8 @@
 [Unit]
 Description=Container providing Tautulli Plex monitoring
 After=plex-network.service plex-media-server.service plex-pod.service
-Requires=plex-network.service plex-pod.service
+Requires=plex-pod.service plex-media-server.service
+PartOf=plex-pod.service
 
 [Container]
 Pod=plex.pod

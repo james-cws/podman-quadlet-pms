@@ -2,6 +2,7 @@
 Description=Container providing a rootless Plex Media Server
 After=plex-network.service plex-pod.service
 Requires=plex-network.service plex-pod.service
+PartOf=plex-pod.service
 
 [Container]
 Pod=plex.pod
